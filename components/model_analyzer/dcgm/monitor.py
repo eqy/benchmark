@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from multiprocessing.pool import ThreadPool
-import time
+import time, os
 
 from ..tb_dcgm_types.da_exceptions import TorchBenchAnalyzerException
 
@@ -49,7 +49,13 @@ class Monitor(ABC):
 
         # Thread pool
         self._thread_pool = ThreadPool(processes=1)
+        # Could be mixed with CPU and GPU metrics
         self._metrics = metrics
+        # Process ID to be monitored. set to current process by default
+        self._monitored_pid = os.getpid()
+        # list to save all cpu metric values
+        # format: [ {CPUUsedMemory: [(timestamp, value), (timestamp, value),...], ...} ]
+        self._cpu_raw_metric_valus = []
 
     def _monitoring_loop(self):
         frequency = self._frequency
@@ -125,3 +131,13 @@ class Monitor(ABC):
 
         self._thread_pool.terminate()
         self._thread_pool.close()
+
+    def set_monitored_pid(self, pid):
+        self._monitored_pid = pid
+    
+    @abstractmethod
+    def _get_cpu_stats(self):
+        """
+        This function is called to get cpu metric values such as used memory or available memory.
+        """
+        pass

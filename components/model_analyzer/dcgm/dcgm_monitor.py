@@ -33,7 +33,6 @@ from . import dcgm_field_helpers
 from . import dcgm_structs as structs
 
 import time
-import psutil
 
 
 class DCGMMonitor(Monitor):

@@ -68,6 +68,7 @@ class ModelAnalyzer:
         Add new metrics to monitor.
         """
         self._metrics.extend(metrics_list)
+        self._metrics = list(set(self._metrics))
         self.gpu_metrics = [_ for _ in self._metrics if _ in DCGMMonitor.model_analyzer_to_dcgm_field]
         self.cpu_metrics = [_ for _ in self._metrics if _ in DCGMMonitor.model_analyzer_CPU_metrics]
 

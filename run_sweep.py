@@ -141,6 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("--jit", action='store_true', help="Turn on torchscript.")
     parser.add_argument("-o", "--output", type=str, default="tb-output.json", help="The default output json file.")
     parser.add_argument("--proper-bs", action='store_true', help="Find the best batch_size for current devices.")
+    parser.add_argument("--full-metrics", action='store_true', help="Run full metrics, including latency, flops, gpu used memory, and cpu used memory.")
     args, extra_args = parser.parse_known_args()
     args.models = _list_model_paths(args.models)
     results = []
@@ -152,6 +153,9 @@ if __name__ == "__main__":
                 sys.exit(1)
             from scripts.proper_bs import _run_model_test_proper_bs
             r = _run_model_test_proper_bs(model_path, test, device, args.jit, batch_size=args.bs, extra_args=extra_args)
+        elif args.full_metrics:
+            from scripts.metrics_analyzer import _run_model_test_metrics
+            r = _run_model_test_metrics(model_path, test, device, args.jit, batch_size=args.bs, extra_args=extra_args)
         else:
             r = _run_model_test(model_path, test, device, args.jit, batch_size=args.bs, extra_args=extra_args)
         results.append(r)

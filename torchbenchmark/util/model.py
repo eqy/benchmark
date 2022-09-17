@@ -124,12 +124,8 @@ class BenchmarkModel(metaclass=PostInitProcessor):
         # setup distributed trainer
         if self.dargs.distributed:
             from torchbenchmark.util.distributed.core_model.apply_trainer import apply_trainer
-            if is_hf_model(self):
-                # DDP requires to use unwrapped model for huggingface
-                module, _inputs = self.get_module(wrap_model=False)
-            else:
-                module, _inputs = self.get_module()
-            self.set_module(apply_trainer(module, self.dargs.distributed))
+            wrapped_module = apply_trainer(self, self.dargs.distributed)
+            self.set_module(wrapped_module)
         if self.test == "cuda":
             torch.cuda.empty_cache()
 

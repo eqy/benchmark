@@ -111,6 +111,45 @@ class HuggingFaceModel(BenchmarkModel):
     def enable_fp16_half(self):
         self.model = self.model.half()
 
+    def enable_ddp(self):
+        import os
+        from torch.nn.parallel import DistributedDataParallel as DDP
+        from accelerate import Accelerator
+        accelerator = Accelerator(mixed_precision='fp16' if self.DEFAULT_EVAL_CUDA_PRECISION=='fp16' else 'no')
+        local_rank = int(os.getenv("LOCAL_RANK", -1))
+        module = accelerator.prepare(self.model)
+        ddp_module = DDP(
+            module,
+            device_ids=[local_rank],
+            # If buffer broadcast is necessary, specific optimizations might be
+            # necessary to optimize performance. Disable it by default.
+            broadcast_buffers=False,
+            # Set gradient as bucket view to avoid unnecessary copies
+            gradient_as_bucket_view=True,
+            # TODO: tune bucket_cap_mb
+            static_graph=True,
+        )
+        if self.test == "train":
+            self.optimizer = accelerator.prepare(self.optimizer)
+        return ddp_module
+
+    def enable_fsdp(self):
+        import os
+        import torch
+        from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+        from accelerate import Accelerator
+        accelerator = Accelerator(mixed_precision='fp16' if self.DEFAULT_EVAL_CUDA_PRECISION=='fp16' else 'no')
+        module = accelerator.prepare(self.model)
+        local_rank = int(os.getenv("LOCAL_RANK", -1))
+        torch.cuda.set_device(local_rank)
+        fsdp_module = FSDP(
+            module,
+            device_id = torch.cuda.current_device()
+        )
+        if self.test == "train":
+            self.optimizer = accelerator.prepare(self.optimizer)
+        return fsdp_module
+
     def train(self):
         outputs = self.model(**self.example_inputs)
         loss = outputs.loss

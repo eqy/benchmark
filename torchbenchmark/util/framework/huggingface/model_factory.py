@@ -129,8 +129,6 @@ class HuggingFaceModel(BenchmarkModel):
             # TODO: tune bucket_cap_mb
             static_graph=True,
         )
-        if self.test == "train":
-            self.optimizer = accelerator.prepare(self.optimizer)
         return ddp_module
 
     def enable_fsdp(self):
@@ -146,8 +144,6 @@ class HuggingFaceModel(BenchmarkModel):
             module,
             device_id = torch.cuda.current_device()
         )
-        if self.test == "train":
-            self.optimizer = accelerator.prepare(self.optimizer)
         return fsdp_module
 
     def train(self):

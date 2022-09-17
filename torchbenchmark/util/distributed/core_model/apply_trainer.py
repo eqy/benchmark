@@ -14,7 +14,7 @@ def apply_trainer(model, trainer):
     else:
         module, _inputs = model.get_module()
     if trainer == "ddp":
-        if hasattr("enable_ddp", model) and model.enable_ddp:
+        if hasattr(model, "enable_ddp") and model.enable_ddp:
             return model.enable_ddp()
         local_rank = int(os.getenv("LOCAL_RANK", -1))
         ddp_module = DDP(
@@ -30,7 +30,7 @@ def apply_trainer(model, trainer):
         ) 
         return ddp_module
     elif trainer == "fsdp":
-        if hasattr("enable_fsdp", model) and model.enable_fsdp:
+        if hasattr(model, "enable_fsdp") and model.enable_fsdp:
             return model.enable_fsdp()
         import torch
         from torch.distributed.fsdp import FullySharedDataParallel as FSDP
